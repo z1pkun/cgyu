@@ -11,8 +11,6 @@ document.querySelectorAll(".format").forEach(button => {
     document.querySelectorAll(".format").forEach(b => b.classList.remove("active"));
     button.classList.add("active");
     state.format = button.dataset.format;
-
-    // MP3では動画品質は意味がないため表示上は選択可能なままにします。
     quality.disabled = state.format === "mp3";
   });
 });
@@ -55,16 +53,42 @@ form.addEventListener("submit", async (event) => {
   downloadButton.disabled = true;
   downloadButton.textContent = "処理中…";
 
-  // 静的サイト単体では動画の取得・変換を実行できないため、
-  // 本番ではここを自分の許可済みバックエンドのAPI呼び出しに置き換えます。
-  showStatus(
-    `${state.format.toUpperCase()} / ${state.format === "mp4" ? quality.value + "p" : "音声"} を選択しました。` +
-    " 現在は静的フロントエンドのみです。READMEのAPI接続手順に従ってバックエンドを接続してください。",
-    false
-  );
+  try {
+    const apiUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:3000/api/download"
+      : "https://your-api-domain.com/api/download";
 
-  setTimeout(() => {
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: url,
+        format: state.format,
+        quality: state.format === "mp4" ? quality.value : null
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "ダウンロードに失敗しました");
+    }
+
+    const data = await response.json();
+    showStatus("ダウンロードが完了しました！", false);
+
+    if (data.downloadUrl) {
+      const link = document.createElement("a");
+      link.href = data.downloadUrl;
+      link.download = data.filename || `video.${state.format === "mp4" ? "mp4" : "mp3"}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+  } catch (error) {
+    showStatus(error.message || "エラーが発生しました", true);
+  } finally {
     downloadButton.disabled = false;
     downloadButton.textContent = "ダウンロード";
-  }, 900);
+  }
 });
