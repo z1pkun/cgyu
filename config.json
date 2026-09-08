@@ -1,0 +1,11 @@
+{
+  "name": "YouTubeDownloader",
+  "version": "1.0.0",
+  "type": "static-frontend",
+  "entry": "index.html",
+  "formats": [
+    "mp4",
+    "mp3"
+  ],
+  "backend_required_for_conversion": true
+}
