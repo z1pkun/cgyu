@@ -3,3 +3,11 @@
   "format": "mp4",
   "quality": "720"
 }
+{
+  "downloadUrl": "https://your-storage.com/video.mp4",
+  "filename": "video.mp4",
+  "message": "success"
+}
+{
+  "message": "エラーメッセージ"
+}
